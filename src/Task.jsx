@@ -108,6 +108,7 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
   }, []);
   useEffect(() => {ref.current?.querySelector('.drawer-scroll')?.scrollTo({top: 0});}, [t.id]);
   const p = phase(t, paused);
+  const rejected = t.stage === 'rejected';
   const all = Object.values(byId);
   const latest = [...t.attempts].reverse().find(a => a.revision === t.revision && a.result?.criteria);
   const blocks = all.flatMap(task => task.dependencies.filter(d => target(d) === t.id).map(d => ({id: task.id, reason: d.reason})));
@@ -148,11 +149,11 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
         <h2 id="drawer-title">{t.title}</h2>
         <p className={`drawer-phase ${p.tone}`}><span className={`status-dot ${p.tone}`} aria-hidden="true" />{p.text}</p>
         <div className="drawer-actions">
-          {t.stage !== 'done' && <button type="button" className="tool" onClick={() => act(`/api/tasks/${t.id}/${control}`)}>{control === 'resume' ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}{control === 'resume' ? 'Resume' : 'Stop'}</button>}
-          {t.stage !== 'done' && !t.container && <button type="button" className="tool" disabled={!!t.active} onClick={() => act(`/api/tasks/${t.id}/replan`, 'POST')}><RefreshCw size={14} aria-hidden="true" />Replan</button>}
-          <button type="button" className="tool" disabled={!!t.active} onClick={() => edit(t)}><Pencil size={14} aria-hidden="true" />Edit</button>
+          {t.stage !== 'done' && !rejected && <button type="button" className="tool" onClick={() => act(`/api/tasks/${t.id}/${control}`)}>{control === 'resume' ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}{control === 'resume' ? 'Resume' : 'Stop'}</button>}
+          {t.stage !== 'done' && !rejected && !t.container && <button type="button" className="tool" disabled={!!t.active} onClick={() => act(`/api/tasks/${t.id}/replan`, 'POST')}><RefreshCw size={14} aria-hidden="true" />Replan</button>}
+          <button type="button" className="tool" disabled={!!t.active || rejected} onClick={() => edit(t)}><Pencil size={14} aria-hidden="true" />Edit</button>
           <span className="spacer" />
-          <button type="button" className="tool danger" disabled={!!t.active} onClick={async () => {if (confirm('Archive this task?') && await act(`/api/tasks/${t.id}`, 'DELETE')) close();}}><Archive size={14} aria-hidden="true" />Archive</button>
+          <button type="button" className="tool danger" disabled={!!t.active || rejected} onClick={async () => {if (confirm('Archive this task?') && await act(`/api/tasks/${t.id}`, 'DELETE')) close();}}><Archive size={14} aria-hidden="true" />Archive</button>
         </div>
       </header>
       <div className="drawer-scroll">
@@ -171,11 +172,15 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
             return <li key={i} className={outcome === 'passed' ? 'good' : outcome ? 'bad' : ''}><span className="criterion-mark" aria-label={outcome || 'not checked'}>{outcome === 'passed' ? <CheckCircle2 size={15} /> : outcome ? <XCircle size={15} /> : <CircleDashed size={15} />}</span><span>{c}</span></li>;
           })}</ol>
         </Section>}
-        {!!t.planReviews?.length && <Section icon={ShieldCheck} title="Plan evaluation" count={t.planReviews.length} tone={t.stage === 'proposed' ? 'callout' : ''}>
+        {t.rejection && <Section icon={XCircle} title="Why it was rejected" tone="callout">
+          {t.rejection.findings?.length ? <><p className="muted">The plan evaluator kicked it back for the last time:</p><ul className="plan-findings">{t.rejection.findings.map((f, i) => <li key={i}>{f}</li>)}</ul></>
+            : <><p className="muted">Its {t.rejection.relation || 'prerequisite'} was rejected:</p><RelationLink id={t.rejection.prerequisite} task={byId[t.rejection.prerequisite]} reason={t.rejection.relation} select={select} /></>}
+        </Section>}
+        {!!t.planReviews?.length && <Section icon={ShieldCheck} title="Plan evaluation" count={t.planReviews.length} tone={t.stage === 'proposed' || rejected ? 'callout' : ''}>
           <ol className="timeline">{t.planReviews.map((r, i) => [r, i + 1]).reverse().map(([r, n]) => <li key={n} className={`attempt ${r.accepted ? 'good' : 'bad'}`}>
             <span className="attempt-node" aria-hidden="true">{r.accepted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}</span>
             <div className="attempt-body">
-              <div className="attempt-head"><strong>#{n} {r.accepted ? 'Accepted' : 'Kicked back'}</strong><span className="muted">rev {r.revision} · {ago(r.at)}</span></div>
+              <div className="attempt-head"><strong>#{n} {r.accepted ? 'Accepted' : rejected && t.rejection?.findings?.length && n === t.planReviews.length ? 'Rejected' : 'Kicked back'}</strong><span className="muted">rev {r.revision} · {ago(r.at)}</span></div>
               {!!r.findings.length && <ul className="plan-findings">{r.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
             </div>
           </li>)}</ol>

@@ -27,7 +27,14 @@ export const workspaceName = t => t.shortId ? t.shortId.replace(/-\d+$/, '') : (
 
 export const kickbacks = t => (t.planReviews || []).filter(r => !r.accepted).length;
 
+export const rejectionText = (t, name = id => id) => {
+  const r = t.rejection;
+  if (!r) return '';
+  return r.findings?.length ? r.findings.join(' ') : `its ${r.relation || 'prerequisite'} ${r.prerequisiteName || name(r.prerequisite)} was rejected`;
+};
+
 export function phase(t, paused) {
+  if (t.stage === 'rejected') return {text: `Rejected: ${rejectionText(t)}`, tone: 'bad'};
   if (t.blocked) return {text: `Needs decision: ${t.failure}`, tone: 'bad'};
   if (t.stage === 'done') return {text: t.container ? 'All child tasks done' : 'Accepted', tone: 'good'};
   if (t.stopped || paused) return {text: t.active ? 'Stopping' : 'Stopped', tone: 'muted'};
@@ -80,7 +87,7 @@ export function display(field, t) {
 }
 
 const PALETTE = ['#6e9bff', '#f2b45a', '#5ccf8d', '#f27b8a', '#b48cf2', '#4fc8e8', '#f59a5b', '#7fd4c1', '#d9d36a', '#e88ad6'];
-const TONES = {Proposed: '#b48cf2', 'To do': '#8b95a7', 'In progress': '#4fa8ff', Blocked: '#f27b8a', Review: '#f2b45a', Done: '#5ccf8d', Running: '#4fa8ff', Stopped: '#8b95a7', Idle: '#6e7a8f', 'Needs decision': '#f27b8a'};
+const TONES = {Proposed: '#b48cf2', Rejected: '#c0566a', 'To do': '#8b95a7', 'In progress': '#4fa8ff', Blocked: '#f27b8a', Review: '#f2b45a', Done: '#5ccf8d', Running: '#4fa8ff', Stopped: '#8b95a7', Idle: '#6e7a8f', 'Needs decision': '#f27b8a'};
 
 export function colorScale(field, tasks) {
   if (!field) return null;
