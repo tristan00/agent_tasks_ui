@@ -231,7 +231,7 @@ dialog.drawer > * { margin: 0; }
 .pl-sessions { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; align-self: start; }
 .pl-sessions h4, .pl-box h4 { margin: 2px 4px 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
 .pl-srow { display: flex; flex-direction: column; gap: 2px; text-align: left; border: 1px solid var(--soft); border-left: 3px solid var(--line); border-radius: 6px; padding: 7px 8px; background: var(--bg); }
-.pl-srow.running { border-left-color: var(--live); } .pl-srow.waiting { border-left-color: var(--good); }
+.pl-srow.running { border-left-color: var(--live); } .pl-srow.finished { border-left-color: var(--good); }
 .pl-srow.on { border-color: var(--accent); }
 .pl-srow .t { font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; gap: 6px; }
 .pl-srow .m { font-size: 12px; color: var(--muted); }

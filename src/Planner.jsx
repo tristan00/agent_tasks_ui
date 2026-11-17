@@ -4,7 +4,7 @@ import {duration, within, pathKey} from './fields';
 const FILTERS = [['action', 'Board actions', true], ['reject', 'Rejected calls', true], ['msg', 'Messages', true], ['tool', 'Other tools', false], ['think', 'Thinking', false]];
 const ACTION_WORDS = {created: 'Created', edited: 'Edited', replan: 'Asked to replan', stopped: 'Stopped', resumed: 'Resumed', deleted: 'Deleted'};
 const KIND_WORDS = {initial: 'Initial', 'follow-up': 'Follow-up', wake: 'Coordinator wake-up'};
-const STATUS_TONE = {running: 'live', waiting: 'good', stopped: ''};
+const STATUS_TONE = {running: 'live', finished: 'good', stopped: ''};
 const money = n => n == null ? '—' : `$${n.toFixed(2)}`;
 const clock = ms => ms ? new Date(ms).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '';
 const firstLine = text => (text || '').split('\n').find(l => l.trim()) || '';
@@ -215,7 +215,7 @@ export default function Planner({workspace, tasks, select, api, names}) {
         {session.agent && <span className="muted">{session.agent.model}{session.agent.effort ? ` · ${session.agent.effort}` : ''}</span>}
         <span className="spacer" />
         <button onClick={() => setDialog('request')}>Open request</button>
-        <button disabled={session.status !== 'waiting'} onClick={() => setDialog('follow')}>Send follow-up</button>
+        <button disabled={session.status !== 'finished'} onClick={() => setDialog('follow')}>Send follow-up</button>
         <button className="danger" disabled={session.status !== 'running'} onClick={() => window.confirm('Stop this planner session and its tasks?') && api(`/api/sessions/${session.id}/stop`, 'POST', {}).catch(e => setError(e.message))}>Stop session</button>
       </div>
       {error && <p className="error">{error}</p>}
