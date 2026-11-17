@@ -4,7 +4,7 @@ import {BorderBeam} from './Activity';
 import TaskName from './TaskName';
 import {attemptCount, attemptMs, categoryName, compact, duration, failed, leadMs, phase, tokens, workMs, waitMs} from './fields';
 
-const ROLE_HUE = {worker: 220, analytics: 190, 'backend-code': 222, 'ui-code': 280, design: 320, optimization: 30, test: 140, docs: 40, data: 160, audit: 12};
+const ROLE_HUE = {worker: 220, analytics: 190, 'backend-code': 222, 'ui-code': 280, design: 320, optimization: 30, test: 140, docs: 40, data: 160, audit: 12, 'art-direction': 330, modelling: 25, 'technical-art': 265, animation: 175, vfx: 50};
 const roleStyle = role => ({'--tag-hue': ROLE_HUE[role] ?? 220});
 export const RoleTag = ({role}) => <span className="tag role" style={roleStyle(role)}>{role}</span>;
 const target = d => typeof d === 'string' ? d : d.target;
