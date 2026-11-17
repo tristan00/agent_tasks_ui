@@ -40,7 +40,7 @@ export function phase(t, paused) {
   if (t.stopped || paused) return {text: t.active ? 'Stopping' : 'Stopped', tone: 'muted'};
   if (t.stage === 'proposed') {
     const last = t.planReviews?.at(-1), kicks = kickbacks(t);
-    if (last && !last.accepted && last.revision === t.revision) return {text: `Kicked back ${kicks}×: ${last.findings.join(' ')}`, tone: 'warn'};
+    if (last && !last.accepted && last.revision === t.revision) return {text: `Kicked back ${kicks}×: ${(last.findings || []).join(' ')}`, tone: 'warn'};
     return {text: kicks ? `Revised after ${kicks} kick-back${kicks > 1 ? 's' : ''}; awaiting plan evaluation` : 'Awaiting plan evaluation', tone: 'muted'};
   }
   if (t.active) return {text: t.stage === 'replan' ? 'Replanning' : t.stage === 'review' ? 'Reviewing' : 'Implementing', tone: 'live'};

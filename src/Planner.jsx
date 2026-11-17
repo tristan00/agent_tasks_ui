@@ -146,15 +146,15 @@ function Evaluations({session, tasks, select}) {
   const name = id => byId[id] ? `${byId[id].shortId ? `${byId[id].shortId} ` : ''}${byId[id].title}` : id;
   return <div className="pl-box"><h4>Plan evaluations</h4>
     {runs.length ? runs.map(([e, n]) => {
-      const kicked = e.verdicts.filter(v => !v.accepted), accepted = e.verdicts.length - kicked.length;
+      const verdicts = e.verdicts || [], kicked = verdicts.filter(v => !v.accepted), accepted = verdicts.length - kicked.length;
       const state = !e.ended ? 'running' : e.error ? 'failed' : `${accepted} accepted · ${kicked.length} kicked back`;
       return <details key={n} className="pl-kv" open={n === runs.length && !!kicked.length}>
         <summary><span>#{n} · {clock(e.started)} · {state}</span><span>{money(e.usage?.costUsd ?? null)}</span></summary>
         {e.error && <p className="error">{e.error}</p>}
-        {!e.ended && <p className="muted">Evaluating {plural(e.submitted.length, 'proposed task')}…</p>}
-        {e.verdicts.map(v => <div key={v.task} className={`pl-verdict ${v.accepted ? 'good' : 'bad'}`}>
+        {!e.ended && <p className="muted">Evaluating {plural((e.submitted || []).length, 'proposed task')}…</p>}
+        {verdicts.map(v => <div key={v.task} className={`pl-verdict ${v.accepted ? 'good' : 'bad'}`}>
           <button className="link" onClick={() => select(v.task)}>{v.accepted ? '✓' : '↩'} {name(v.task)}</button>
-          {!!v.findings.length && <ul>{v.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
+          {!!v.findings?.length && <ul>{v.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
         </div>)}
       </details>;
     }) : <p className="muted">{session.evaluations ? 'None yet' : 'This workspace has no plan evaluator'}</p>}
@@ -247,7 +247,7 @@ export default function Planner({workspace, tasks, select, api, names}) {
       <div className="pl-metrics">
         {[['Elapsed', duration(elapsed(session))], ['Turns', turns.length], ['Cost so far', money(shownCost || null)], ['Board actions', (session.actions || []).length]].map(([l, v]) => <div key={l} className="pl-metric"><div className="l">{l}</div><div className="v">{v}</div></div>)}
         <div className={`pl-metric${rejectedCount(session) ? ' bad' : ''}`}><div className="l">Rejected calls</div><div className="v">{rejectedCount(session)}</div></div>
-        <div className="pl-metric"><div className="l">Plan kick-backs</div><div className="v">{(session.evaluations || []).reduce((sum, e) => sum + e.verdicts.filter(v => !v.accepted).length, 0)}</div></div>
+        <div className="pl-metric"><div className="l">Plan kick-backs</div><div className="v">{(session.evaluations || []).reduce((sum, e) => sum + (e.verdicts || []).filter(v => !v.accepted).length, 0)}</div></div>
       </div>
       <div className="pl-requests" aria-label="Requests"><span className="muted">Requests</span>
         {session.requests.map((r, i) => <button key={i} className={`pl-req${i + 1 === number ? ' on' : ''}`} aria-pressed={i + 1 === number} onClick={() => setPicked({session: session.id, number: i + 1})} title={r.text}>

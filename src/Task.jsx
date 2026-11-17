@@ -181,7 +181,7 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
             <span className="attempt-node" aria-hidden="true">{r.accepted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}</span>
             <div className="attempt-body">
               <div className="attempt-head"><strong>#{n} {r.accepted ? 'Accepted' : rejected && t.rejection?.findings?.length && n === t.planReviews.length ? 'Rejected' : 'Kicked back'}</strong><span className="muted">rev {r.revision} · {ago(r.at)}</span></div>
-              {!!r.findings.length && <ul className="plan-findings">{r.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
+              {!!r.findings?.length && <ul className="plan-findings">{r.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
             </div>
           </li>)}</ol>
         </Section>}

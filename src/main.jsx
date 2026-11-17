@@ -10,6 +10,16 @@ import {phase, matches, categoryName, pathKey, within} from './fields';
 import './style.css';
 import './redesign.css';
 
+class PageBoundary extends React.Component {
+  constructor(props) { super(props); this.state = {error: null}; }
+  static getDerivedStateFromError(error) { return {error}; }
+  componentDidUpdate(previous) { if (previous.page !== this.props.page && this.state.error) this.setState({error: null}); }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return <div className="error" role="alert"><p>The {this.props.page} page failed to render: {String(this.state.error.message || this.state.error)}</p><button onClick={() => this.setState({error: null})}>Try again</button></div>;
+  }
+}
+
 const readPreference = key => { try { return localStorage.getItem(key); } catch { return null; } };
 const savePreference = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
 
@@ -144,14 +154,16 @@ function App() {
         {error && <p className="error" role="alert">{error}</p>}
         {state.error && <p className="error">Scheduler: {state.error}</p>}
         {page !== 'Settings' && <ScopeBar workspaces={workspaces} workspace={workspaces.find(path => pathKey(path) === pathKey(workspace)) || ''} setWorkspace={chooseWorkspace} allTasks={tasks} workspaceNames={state.workspaceIds} query={query} setQuery={setQuery} filters={filters} setFilters={setFilters} tasks={scoped} count={visible.length} total={scoped.length} showFilters={page !== 'Analytics' && page !== 'Planner'} />}
+        <PageBoundary page={page}>
         {page === 'Board' && <div className="board page-enter">{STATUSES.map(column)}</div>}
         {page === 'List' && <table className="list page-enter"><thead><tr><th>Task</th><th>Status</th><th>Role</th><th>Languages</th><th>Functions</th><th>Execution capabilities</th><th>Blocked by</th><th>State</th></tr></thead><tbody>{visible.map(t => <tr key={t.id}><td><button className="link" onClick={() => setSelected(t.id)}><TaskName task={t} /></button></td><td>{t.status}</td><td>{t.attributes.role}</td><td>{categoryText(t.attributes, 'languages')}</td><td>{categoryText(t.attributes, 'functions')}</td><td>{t.attributes.needs.join(', ') || 'none'}</td><td>{t.dependencies.map(d => byId[typeof d === 'string' ? d : d.target]?.title).filter(Boolean).join(', ')}</td><td className={`reason ${phase(t, state.paused).tone}`}>{phase(t, state.paused).text}</td></tr>)}</tbody></table>}
         {page === 'Graph' && <Graph key={workspace} activityEnabled={!offline && !state.paused} workspace={workspace} tasks={visible} allTasks={tasks} select={setSelected} />}
         {page === 'Planner' && <Planner workspace={workspace} tasks={tasks} select={setSelected} api={api} names={state.workspaceIds} />}
         {page === 'Analytics' && <Analytics workspace={workspace} select={setSelected} names={state.workspaceIds} />}
         {page === 'Settings' && <Settings state={state} act={act} />}
+        </PageBoundary>
       </main>
-      {selected && detail?.id === selected && <Detail task={detail} byId={byId} paused={state.paused} wordLimit={limitsFor(state, workspaceOf(byId[selected])).words} reasons={dependencyReasons(state)} close={() => setSelected(null)} select={setSelected} act={act} edit={t => { setSelected(null); setEditor({task: t}); }} />}
+      {selected && detail?.id === selected && <PageBoundary page="task panel"><Detail task={detail} byId={byId} paused={state.paused} wordLimit={limitsFor(state, workspaceOf(byId[selected])).words} reasons={dependencyReasons(state)} close={() => setSelected(null)} select={setSelected} act={act} edit={t => { setSelected(null); setEditor({task: t}); }} /></PageBoundary>}
       {editor && !editor.grouped && <Editor {...editor} tasks={tasks} state={state} workspace={workspace} close={() => { setEditor(null); refresh(); }} />}
       {editor?.grouped && <GroupEditor tasks={tasks} state={state} workspace={workspace} close={() => { setEditor(null); refresh(); }} />}
     </div>
