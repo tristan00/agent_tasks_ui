@@ -125,7 +125,6 @@ dialog.drawer > * { margin: 0; }
 .badge.good, .badge.status-done { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
 .badge.bad, .badge.status-blocked { background: color-mix(in srgb, var(--bad) 20%, transparent); color: var(--bad); }
 .badge.status-proposed { background: color-mix(in srgb, #b48cf2 20%, transparent); color: #b48cf2; }
-.badge.status-rejected { background: color-mix(in srgb, var(--bad) 20%, transparent); color: var(--bad); }
 .badge.status-review { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
 .stat-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .stat { padding: 9px 11px; border-radius: 9px; background: var(--bg); border: 1px solid color-mix(in srgb, var(--line) 45%, transparent); }

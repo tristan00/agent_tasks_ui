@@ -149,8 +149,8 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
         <p className={`drawer-phase ${p.tone}`}><span className={`status-dot ${p.tone}`} aria-hidden="true" />{p.text}</p>
         <div className="drawer-actions">
           {t.stage !== 'done' && <button type="button" className="tool" onClick={() => act(`/api/tasks/${t.id}/${control}`)}>{control === 'resume' ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}{control === 'resume' ? 'Resume' : 'Stop'}</button>}
-          {t.stage !== 'done' && t.stage !== 'rejected' && !t.container && <button type="button" className="tool" disabled={!!t.active} onClick={() => act(`/api/tasks/${t.id}/replan`, 'POST')}><RefreshCw size={14} aria-hidden="true" />Replan</button>}
-          <button type="button" className="tool" disabled={!!t.active || t.stage === 'rejected'} onClick={() => edit(t)}><Pencil size={14} aria-hidden="true" />Edit</button>
+          {t.stage !== 'done' && !t.container && <button type="button" className="tool" disabled={!!t.active} onClick={() => act(`/api/tasks/${t.id}/replan`, 'POST')}><RefreshCw size={14} aria-hidden="true" />Replan</button>}
+          <button type="button" className="tool" disabled={!!t.active} onClick={() => edit(t)}><Pencil size={14} aria-hidden="true" />Edit</button>
           <span className="spacer" />
           <button type="button" className="tool danger" disabled={!!t.active} onClick={async () => {if (confirm('Archive this task?') && await act(`/api/tasks/${t.id}`, 'DELETE')) close();}}><Archive size={14} aria-hidden="true" />Archive</button>
         </div>
@@ -171,11 +171,11 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
             return <li key={i} className={outcome === 'passed' ? 'good' : outcome ? 'bad' : ''}><span className="criterion-mark" aria-label={outcome || 'not checked'}>{outcome === 'passed' ? <CheckCircle2 size={15} /> : outcome ? <XCircle size={15} /> : <CircleDashed size={15} />}</span><span>{c}</span></li>;
           })}</ol>
         </Section>}
-        {!!t.planReviews?.length && <Section icon={ShieldCheck} title="Plan evaluation" count={t.planReviews.length} tone={t.stage === 'proposed' || t.stage === 'rejected' ? 'callout' : ''}>
+        {!!t.planReviews?.length && <Section icon={ShieldCheck} title="Plan evaluation" count={t.planReviews.length} tone={t.stage === 'proposed' ? 'callout' : ''}>
           <ol className="timeline">{t.planReviews.map((r, i) => [r, i + 1]).reverse().map(([r, n]) => <li key={n} className={`attempt ${r.accepted ? 'good' : 'bad'}`}>
             <span className="attempt-node" aria-hidden="true">{r.accepted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}</span>
             <div className="attempt-body">
-              <div className="attempt-head"><strong>#{n} {r.accepted ? 'Accepted' : t.stage === 'rejected' && n === t.planReviews.length ? 'Rejected for good' : 'Kicked back'}</strong><span className="muted">rev {r.revision} · {ago(r.at)}</span></div>
+              <div className="attempt-head"><strong>#{n} {r.accepted ? 'Accepted' : 'Kicked back'}</strong><span className="muted">rev {r.revision} · {ago(r.at)}</span></div>
               {!!r.findings.length && <ul className="plan-findings">{r.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
             </div>
           </li>)}</ol>
