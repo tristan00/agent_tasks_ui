@@ -43,7 +43,7 @@ export function phase(t, paused) {
     if (last && !last.accepted && last.revision === t.revision) return {text: `Kicked back ${kicks}×: ${(last.findings || []).join(' ')}`, tone: 'warn'};
     return {text: kicks ? `Revised after ${kicks} kick-back${kicks > 1 ? 's' : ''}; awaiting plan evaluation` : 'Awaiting plan evaluation', tone: 'muted'};
   }
-  if (t.active) return {text: t.stage === 'replan' ? 'Replanning' : t.stage === 'review' ? 'Reviewing' : 'Implementing', tone: 'live'};
+  if (t.active) return {text: t.stage === 'replan' ? 'Replanning' : t.stage === 'review' ? 'Reviewing' : t.stage === 'merge' ? 'Merging' : 'Implementing', tone: 'live'};
   if (t.stage === 'replan') return {text: 'Queued for replanning', tone: 'warn'};
   return {text: t.waitingReason || (t.failure ? `Retrying: ${t.failure}` : 'Ready'), tone: t.waitingReason ? 'muted' : t.failure ? 'warn' : ''};
 }
