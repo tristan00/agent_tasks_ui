@@ -31,7 +31,7 @@ main { padding: 16px 24px; min-width: 0; }
 .pill.warn { color: var(--warn); }
 .filters { display: flex; gap: 12px; align-items: center; margin: 14px 0; flex-wrap: wrap; }
 .filters input[type=search] { max-width: 320px; }
-.board { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 12px; align-items: start; }
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 1fr); overflow-x: auto; gap: 12px; align-items: start; }
 .column { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .column h2 { font-size: 13px; margin: 0; display: flex; justify-content: space-between; color: var(--muted); }
 .task { border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 6px; padding: 8px; background: var(--bg); }
@@ -81,7 +81,7 @@ label.check input { width: auto; }
 .editor footer { display: flex; justify-content: flex-end; gap: 8px; }
 textarea.code { font-family: ui-monospace, monospace; font-size: 12px; }
 pre { background: var(--bg); padding: 8px; border-radius: 6px; overflow: auto; font-size: 12px; }
-@media (max-width: 800px) { .shell { grid-template-columns: 1fr; } .board { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .shell { grid-template-columns: 1fr; } .board { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: 1fr; } }
 .theme-toggle { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; min-height: 36px; }
 .theme-toggle span:first-child { font-size: 20px; line-height: 1; }
 input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }

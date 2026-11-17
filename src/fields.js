@@ -25,10 +25,18 @@ export const pathKey = p => (p || '').replace(/^\\\\\?\\/, '').replace(/[\\/]+/g
 export const within = (path, scope) => { const p = pathKey(path), s = pathKey(scope); return p === s || p.startsWith(`${s}/`); };
 export const workspaceName = t => t.shortId ? t.shortId.replace(/-\d+$/, '') : (t.workspace || t.cwd || '').replace(/^\\\\\?\\/, '').split(/[\\/]/).filter(Boolean).at(-1) || '';
 
+export const kickbacks = t => (t.planReviews || []).filter(r => !r.accepted).length;
+
 export function phase(t, paused) {
   if (t.blocked) return {text: `Needs decision: ${t.failure}`, tone: 'bad'};
   if (t.stage === 'done') return {text: t.container ? 'All child tasks done' : 'Accepted', tone: 'good'};
   if (t.stopped || paused) return {text: t.active ? 'Stopping' : 'Stopped', tone: 'muted'};
+  if (t.stage === 'rejected') return {text: `Rejected by the plan evaluator: ${(t.planReviews?.at(-1)?.findings || []).join(' ')}`, tone: 'bad'};
+  if (t.stage === 'proposed') {
+    const last = t.planReviews?.at(-1), kicks = kickbacks(t);
+    if (last && !last.accepted && last.revision === t.revision) return {text: `Kicked back ${kicks}×: ${last.findings.join(' ')}`, tone: 'warn'};
+    return {text: kicks ? `Revised after ${kicks} kick-back${kicks > 1 ? 's' : ''}; awaiting plan evaluation` : 'Awaiting plan evaluation', tone: 'muted'};
+  }
   if (t.active) return {text: t.stage === 'replan' ? 'Replanning' : t.stage === 'review' ? 'Reviewing' : 'Implementing', tone: 'live'};
   if (t.stage === 'replan') return {text: 'Queued for replanning', tone: 'warn'};
   return {text: t.waitingReason || (t.failure ? `Retrying: ${t.failure}` : 'Ready'), tone: t.waitingReason ? 'muted' : t.failure ? 'warn' : ''};
@@ -73,7 +81,7 @@ export function display(field, t) {
 }
 
 const PALETTE = ['#6e9bff', '#f2b45a', '#5ccf8d', '#f27b8a', '#b48cf2', '#4fc8e8', '#f59a5b', '#7fd4c1', '#d9d36a', '#e88ad6'];
-const TONES = {'To do': '#8b95a7', 'In progress': '#4fa8ff', Blocked: '#f27b8a', Review: '#f2b45a', Done: '#5ccf8d', Running: '#4fa8ff', Stopped: '#8b95a7', Idle: '#6e7a8f', 'Needs decision': '#f27b8a'};
+const TONES = {Proposed: '#b48cf2', Rejected: '#c0566a', 'To do': '#8b95a7', 'In progress': '#4fa8ff', Blocked: '#f27b8a', Review: '#f2b45a', Done: '#5ccf8d', Running: '#4fa8ff', Stopped: '#8b95a7', Idle: '#6e7a8f', 'Needs decision': '#f27b8a'};
 
 export function colorScale(field, tasks) {
   if (!field) return null;

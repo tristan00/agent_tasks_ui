@@ -1,8 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Archive, ArrowRight, CheckCircle2, ChevronRight, CircleDashed, Clock, Coins, ExternalLink, GitBranch, Layers, Link2, ListChecks, Pause, Pencil, Play, RefreshCw, RotateCcw, ScrollText, Timer, X, XCircle} from 'lucide-react';
+import {Archive, ArrowRight, CheckCircle2, ChevronRight, CircleDashed, Clock, Coins, ExternalLink, GitBranch, Layers, Link2, ListChecks, Pause, Pencil, Play, RefreshCw, RotateCcw, ScrollText, ShieldCheck, Timer, Undo2, X, XCircle} from 'lucide-react';
 import {BorderBeam} from './Activity';
 import TaskName from './TaskName';
-import {attemptCount, attemptMs, categoryName, compact, duration, failed, leadMs, phase, tokens, workMs, waitMs} from './fields';
+import {attemptCount, attemptMs, categoryName, compact, duration, failed, kickbacks, leadMs, phase, tokens, workMs, waitMs} from './fields';
 
 const ROLE_HUE = {worker: 220, analytics: 190, 'backend-code': 222, 'ui-code': 280, design: 320, optimization: 30, test: 140, docs: 40, data: 160, audit: 12, 'art-direction': 330, modelling: 25, 'technical-art': 265, animation: 175, vfx: 50};
 const roleStyle = role => ({'--tag-hue': ROLE_HUE[role] ?? 220});
@@ -36,6 +36,7 @@ export function TaskCard({task: t, paused, offline, open}) {
       {t.container && <span className="mini-badge" title="Container"><Layers size={12} aria-hidden="true" />{t.children.length}</span>}
       {t.parent && <span className="mini-badge" title="Child task"><GitBranch size={12} aria-hidden="true" />child</span>}
       <span className="spacer" />
+      {!!kickbacks(t) && <span className="mini-stat" title="Kicked back by the plan evaluator"><Undo2 size={12} aria-hidden="true" />{kickbacks(t)}</span>}
       {!!attemptCount(t) && <span className="mini-stat" title="Attempts"><RotateCcw size={12} aria-hidden="true" />{attemptCount(t)}</span>}
     </header>
     <h3 className="card-title">{t.title}</h3>
@@ -148,8 +149,8 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
         <p className={`drawer-phase ${p.tone}`}><span className={`status-dot ${p.tone}`} aria-hidden="true" />{p.text}</p>
         <div className="drawer-actions">
           {t.stage !== 'done' && <button type="button" className="tool" onClick={() => act(`/api/tasks/${t.id}/${control}`)}>{control === 'resume' ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}{control === 'resume' ? 'Resume' : 'Stop'}</button>}
-          {t.stage !== 'done' && !t.container && <button type="button" className="tool" disabled={!!t.active} onClick={() => act(`/api/tasks/${t.id}/replan`, 'POST')}><RefreshCw size={14} aria-hidden="true" />Replan</button>}
-          <button type="button" className="tool" disabled={!!t.active} onClick={() => edit(t)}><Pencil size={14} aria-hidden="true" />Edit</button>
+          {t.stage !== 'done' && t.stage !== 'rejected' && !t.container && <button type="button" className="tool" disabled={!!t.active} onClick={() => act(`/api/tasks/${t.id}/replan`, 'POST')}><RefreshCw size={14} aria-hidden="true" />Replan</button>}
+          <button type="button" className="tool" disabled={!!t.active || t.stage === 'rejected'} onClick={() => edit(t)}><Pencil size={14} aria-hidden="true" />Edit</button>
           <span className="spacer" />
           <button type="button" className="tool danger" disabled={!!t.active} onClick={async () => {if (confirm('Archive this task?') && await act(`/api/tasks/${t.id}`, 'DELETE')) close();}}><Archive size={14} aria-hidden="true" />Archive</button>
         </div>
@@ -169,6 +170,15 @@ export function Detail({task: t, byId, paused, wordLimit, reasons, close, select
             const outcome = latest?.result.criteria[i];
             return <li key={i} className={outcome === 'passed' ? 'good' : outcome ? 'bad' : ''}><span className="criterion-mark" aria-label={outcome || 'not checked'}>{outcome === 'passed' ? <CheckCircle2 size={15} /> : outcome ? <XCircle size={15} /> : <CircleDashed size={15} />}</span><span>{c}</span></li>;
           })}</ol>
+        </Section>}
+        {!!t.planReviews?.length && <Section icon={ShieldCheck} title="Plan evaluation" count={t.planReviews.length} tone={t.stage === 'proposed' || t.stage === 'rejected' ? 'callout' : ''}>
+          <ol className="timeline">{t.planReviews.map((r, i) => [r, i + 1]).reverse().map(([r, n]) => <li key={n} className={`attempt ${r.accepted ? 'good' : 'bad'}`}>
+            <span className="attempt-node" aria-hidden="true">{r.accepted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}</span>
+            <div className="attempt-body">
+              <div className="attempt-head"><strong>#{n} {r.accepted ? 'Accepted' : t.stage === 'rejected' && n === t.planReviews.length ? 'Rejected for good' : 'Kicked back'}</strong><span className="muted">rev {r.revision} · {ago(r.at)}</span></div>
+              {!!r.findings.length && <ul className="plan-findings">{r.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
+            </div>
+          </li>)}</ol>
         </Section>}
         {!!t.feedback.length && <Section icon={RotateCcw} title="Feedback for next attempt" tone="callout"><ul>{t.feedback.map((f, i) => <li key={i}>{f}</li>)}</ul></Section>}
         <Section icon={Layers} title="Properties"><dl className="props">{properties.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Section>

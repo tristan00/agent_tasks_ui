@@ -124,6 +124,8 @@ dialog.drawer > * { margin: 0; }
 .badge.live, .badge.status-inprogress { background: color-mix(in srgb, var(--live) 20%, transparent); color: var(--live); }
 .badge.good, .badge.status-done { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
 .badge.bad, .badge.status-blocked { background: color-mix(in srgb, var(--bad) 20%, transparent); color: var(--bad); }
+.badge.status-proposed { background: color-mix(in srgb, #b48cf2 20%, transparent); color: #b48cf2; }
+.badge.status-rejected { background: color-mix(in srgb, var(--bad) 20%, transparent); color: var(--bad); }
 .badge.status-review { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
 .stat-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .stat { padding: 9px 11px; border-radius: 9px; background: var(--bg); border: 1px solid color-mix(in srgb, var(--line) 45%, transparent); }
@@ -286,3 +288,7 @@ button:disabled { opacity: .5; cursor: default; }
 .pl-follow label { display: flex; flex-direction: column; gap: 4px; }
 @media (max-width: 1280px) { .pl-cols { grid-template-columns: 1fr; } .pl-side { order: -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: start; } }
 @media (max-width: 900px) { .pl { grid-template-columns: 1fr; } }
+.pl-verdict { padding: 4px 0 4px 8px; border-left: 2px solid var(--line); margin: 4px 0; }
+.pl-verdict.good { border-color: var(--good); }
+.pl-verdict.bad { border-color: var(--warn); }
+.pl-verdict ul, .plan-findings { margin: 4px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted, inherit); }

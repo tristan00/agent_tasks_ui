@@ -140,6 +140,27 @@ function useTranscript(session, number) {
   return data;
 }
 
+function Evaluations({session, tasks, select}) {
+  const runs = [...(session.evaluations || [])].map((e, i) => [e, i + 1]).reverse();
+  const byId = Object.fromEntries(tasks.map(t => [t.id, t]));
+  const name = id => byId[id] ? `${byId[id].shortId ? `${byId[id].shortId} ` : ''}${byId[id].title}` : id;
+  return <div className="pl-box"><h4>Plan evaluations</h4>
+    {runs.length ? runs.map(([e, n]) => {
+      const kicked = e.verdicts.filter(v => !v.accepted), accepted = e.verdicts.length - kicked.length;
+      const state = !e.ended ? 'running' : e.error ? 'failed' : `${accepted} accepted · ${kicked.length} kicked back`;
+      return <details key={n} className="pl-kv" open={n === runs.length && !!kicked.length}>
+        <summary><span>#{n} · {clock(e.started)} · {state}</span><span>{money(e.usage?.costUsd ?? null)}</span></summary>
+        {e.error && <p className="error">{e.error}</p>}
+        {!e.ended && <p className="muted">Evaluating {plural(e.submitted.length, 'proposed task')}…</p>}
+        {e.verdicts.map(v => <div key={v.task} className={`pl-verdict ${v.accepted ? 'good' : 'bad'}`}>
+          <button className="link" onClick={() => select(v.task)}>{v.accepted ? '✓' : '↩'} {name(v.task)}</button>
+          {!!v.findings.length && <ul>{v.findings.map((f, i) => <li key={i}>{f}</li>)}</ul>}
+        </div>)}
+      </details>;
+    }) : <p className="muted">{session.evaluations ? 'None yet' : 'This workspace has no plan evaluator'}</p>}
+  </div>;
+}
+
 function FollowUp({session, api, close}) {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
@@ -188,14 +209,14 @@ export default function Planner({workspace, tasks, select, api, names}) {
   if (sessions === null) return <p role="status">{error || 'Loading sessions…'}</p>;
   if (!scoped.length) return <p className="empty">No planner sessions in this workspace yet.</p>;
 
-  const cost = s => s.requests.reduce((sum, r) => sum + (r.usage?.costUsd || 0), 0) || null;
+  const cost = s => (s.requests.reduce((sum, r) => sum + (r.usage?.costUsd || 0), 0) + (s.evaluations || []).reduce((sum, e) => sum + (e.usage?.costUsd || 0), 0)) || null;
   const rejectedCount = s => s.requests.reduce((sum, r) => sum + (r.rejected?.length || 0), 0);
   const elapsed = s => (s.requests.at(-1)?.ended || (s.status === 'running' ? now : s.requests.at(-1)?.planner_ended) || now) - (s.requests[0]?.started || s.created);
   const shownCost = (cost(session) || 0) + (running ? turns.reduce((sum, t) => sum + (t.cost || 0), 0) : 0);
 
   const effects = Object.entries(ACTION_WORDS).map(([kind, label]) => [label, (session.actions || []).filter(a => a.kind === kind)]);
   const grouped = Object.entries(session.requests.flatMap(r => r.rejected || []).reduce((m, r) => ({...m, [r.error]: (m[r.error] || 0) + 1}), {})).sort((a, b) => b[1] - a[1]);
-  const waiting = tasks.filter(t => within(t.workspace ?? t.cwd, session.workspace) && !t.container && (t.status === 'In progress' || t.status === 'Review'));
+  const waiting = tasks.filter(t => within(t.workspace ?? t.cwd, session.workspace) && !t.container && (t.status === 'In progress' || t.status === 'Review' || t.status === 'Proposed'));
   const toggleFilter = k => setShown({...shown, [k]: !shown[k]});
   const visible = placed.map(t => ({...t, total: t.steps.length, steps: t.steps.filter(s => shown[s.kind])}));
   const label = s => <>{names?.[Object.keys(names).find(k => pathKey(k) === pathKey(s.root))] && <span className="task-id">{names[Object.keys(names).find(k => pathKey(k) === pathKey(s.root))]}</span>}{folder(s.workspace)}</>;
@@ -226,6 +247,7 @@ export default function Planner({workspace, tasks, select, api, names}) {
       <div className="pl-metrics">
         {[['Elapsed', duration(elapsed(session))], ['Turns', turns.length], ['Cost so far', money(shownCost || null)], ['Board actions', (session.actions || []).length]].map(([l, v]) => <div key={l} className="pl-metric"><div className="l">{l}</div><div className="v">{v}</div></div>)}
         <div className={`pl-metric${rejectedCount(session) ? ' bad' : ''}`}><div className="l">Rejected calls</div><div className="v">{rejectedCount(session)}</div></div>
+        <div className="pl-metric"><div className="l">Plan kick-backs</div><div className="v">{(session.evaluations || []).reduce((sum, e) => sum + e.verdicts.filter(v => !v.accepted).length, 0)}</div></div>
       </div>
       <div className="pl-requests" aria-label="Requests"><span className="muted">Requests</span>
         {session.requests.map((r, i) => <button key={i} className={`pl-req${i + 1 === number ? ' on' : ''}`} aria-pressed={i + 1 === number} onClick={() => setPicked({session: session.id, number: i + 1})} title={r.text}>
@@ -246,6 +268,7 @@ export default function Planner({workspace, tasks, select, api, names}) {
           <div ref={end} />
         </div>
         <div className="pl-side">
+          <Evaluations session={session} tasks={tasks} select={select} />
           <div className="pl-box"><h4>Board effects</h4>
             {effects.map(([label, list]) => <details key={label} className="pl-kv"><summary><span>{label}</span><span>{new Set(list.map(a => a.task)).size}</span></summary>
               {[...new Map(list.map(a => [a.task, a])).values()].map(a => <button key={a.task} className="link" onClick={() => select(a.task)}>{a.shortId ? `${a.shortId} ` : ''}{a.title}</button>)}</details>)}
