@@ -20,7 +20,7 @@ export const attemptCount = t => t.attempts?.length ?? t.summary?.attempts ?? 0;
 export const leadMs = (t, now = Date.now()) => t.analytics?.leadMs ?? (t.analytics?.createdAt ? now - t.analytics.createdAt : null);
 export const waitMs = t => t.analytics?.intervals?.milliseconds ? sum(Object.values(t.analytics.intervals.milliseconds)) : null;
 export const tokens = t => t.attempts ? sum(t.attempts.map(a => a.evidence?.usage?.totalTokens || 0)) : t.summary?.tokens || 0;
-export const failed = a => !!a.error || (a.ended && a.result && a.result.status !== 'completed');
+export const failed = a => !!a.error || (a.ended && a.result && !['completed', 'accepted', 'replanned'].includes(a.result.status));
 export const pathKey = p => (p || '').replace(/^\\\\\?\\/, '').replace(/[\\/]+/g, '/').replace(/\/$/, '').toLowerCase();
 export const within = (path, scope) => { const p = pathKey(path), s = pathKey(scope); return p === s || p.startsWith(`${s}/`); };
 export const workspaceName = t => t.shortId ? t.shortId.replace(/-\d+$/, '') : (t.workspace || t.cwd || '').replace(/^\\\\\?\\/, '').split(/[\\/]/).filter(Boolean).at(-1) || '';
