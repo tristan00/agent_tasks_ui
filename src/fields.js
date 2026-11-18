@@ -65,6 +65,7 @@ export const FIELDS = [
   category('model', 'Model', 'Execution', t => t.models?.length ? [...new Set(t.models.map(m => m.model))] : ['Not run yet']),
   category('grouping', 'Grouping', 'Structure', t => [t.container ? 'Container' : t.parent ? 'Child' : 'Standalone']),
   category('workspace', 'Workspace', 'Structure', t => [workspaceName(t)]),
+  category('session', 'Session', 'Structure', t => [t.session || 'No session']),
   number('work', 'Working time', 'Execution', t => attemptCount(t) ? workMs(t) : null, duration),
   number('lead', 'Lead time', 'Execution', t => leadMs(t), duration),
   number('wait', 'Waiting time', 'Execution', waitMs, duration),

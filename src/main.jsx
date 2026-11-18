@@ -115,8 +115,23 @@ function App() {
     setError('');
     try { await api(path, method, body); await refresh(); return true; } catch (e) { setError(e.message); return false; }
   }
-  const tasks = state?.tasks || [];
   const sequence = state?.sequence;
+  const [sessions, setSessions] = useState([]);
+  useEffect(() => {
+    let live = true;
+    api('/api/sessions').then(list => { if (live) setSessions(list); }).catch(() => {});
+    return () => { live = false; };
+  }, [sequence]);
+  const sessionOf = useMemo(() => {
+    const owner = new Map();
+    sessions.forEach(s => {
+      const started = new Date(s.created).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+      const name = `${(s.workspace || '').replace(/^\\\\\?\\/, '').split(/[\\/]/).filter(Boolean).at(-1)} · ${started}`;
+      (s.tasks || []).forEach(id => owner.set(id, name));
+    });
+    return owner;
+  }, [sessions]);
+  const tasks = useMemo(() => (state?.tasks || []).map(t => sessionOf.has(t.id) ? {...t, session: sessionOf.get(t.id)} : t), [state?.tasks, sessionOf]);
   useEffect(() => {
     if (!selected) { setDetail(null); return; }
     let live = true;
