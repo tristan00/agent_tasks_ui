@@ -50,9 +50,27 @@ The same tasks as a table, with status, role, languages, functions, execution ca
 
 ### Graph
 
-The plan as a graph: containers and their children, dependencies, ordering, conflicts and related tasks, each drawn with its own line style. Nodes are coloured by status or another field, and finished work can be hidden. Layout is top-down or force-directed, with a minimap, zoom and fit controls. **Inspect relationships** lists every edge with its endpoints and labels.
+The plan as a graph: containers and their children, dependencies, ordering, conflicts and related tasks, each drawn with its own line style. **Fields** picks what each node shows; here it is status, role, working time, lead time, waiting time and attempts. Nodes are coloured by status or another field, and finished work can be hidden. **Inspect relationships** lists every edge with its endpoints and labels.
 
-![Graph](docs/screenshots/graph.png)
+The layered layout runs top-down or left-right:
+
+![Graph, top-down](docs/screenshots/graph.png)
+
+**Physics** switches to a force-directed layout that pulls related tasks together:
+
+![Graph, physics](docs/screenshots/graph-physics.png)
+
+Up close, each connection shows what it means. Pink lines run from a parent to its children. Solid lines are dependencies, labelled with what the dependent task uses from the other (`uses api`, `uses data`, `uses artifact`). Dashed lines are ordering only.
+
+![Parents, children and dependencies](docs/screenshots/graph-closeup-dependencies.png)
+
+A parent task with its subtasks, the tasks it waits on, and the labelled links between them:
+
+![A parent and its subtasks](docs/screenshots/graph-closeup-parents.png)
+
+A short chain: a parent with two subtasks, where the second uses the first's API and is also ordered after it:
+
+![A dependency chain](docs/screenshots/graph-closeup-chain.png)
 
 ### Planner
 
